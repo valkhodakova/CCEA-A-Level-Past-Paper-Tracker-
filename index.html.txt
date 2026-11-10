@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CCEA A-Level Past Paper Tracker</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#81c784">
+  <style>
+    :root {
+      --bg-color: #f1f8e9;
+      --primary-color: #81c784;
+      --secondary-color: #e8f5e9;
+      --text-color: #2e7d32;
+      --card-bg: #ffffff;
+      --border-color: #c8e6c9;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      padding: 20px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    header {
+      background-color: var(--primary-color);
+      color: var(--text-color);
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+    }
+    h1 { font-size: 1.5rem; margin-bottom: 15px; text-align: center; }
+    .name-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(255, 255, 255, 0.5);
+      padding: 10px 15px;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+    }
+    .name-label { font-size: 1.2rem; font-weight: bold; }
+    .name-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid var(--text-color);
+      color: var(--text-color);
+      font-size: 1.2rem;
+      padding: 5px;
+      outline: none;
+    }
+    label { display: block; font-weight: bold; margin-bottom: 10px; }
+    select {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid var(--border-color);
+      border-radius: 6px;
+      font-size: 1rem;
+      background-color: white;
+      margin-bottom: 10px;
+      color: var(--text-color);
+    }
+    .selector-container {
+      background: var(--card-bg);
+      padding: 20px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      margin-bottom: 20px;
+    }
+    .level-buttons { display: flex; gap: 10px; margin-bottom: 20px; }
+    .level-btn {
+      flex: 1;
+      padding: 12px;
+      border: 2px solid var(--primary-color);
+      background: white;
+      color: var(--text-color);
+      font-weight: bold;
+      font-size: 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .level-btn.active { background: var(--primary-color); }
+    .subject-card {
+      background: var(--card-bg);
+      border: 2px solid var(--border-color);
+      border-radius: 8px;
+      margin-bottom: 15px;
+      overflow: hidden;
+    }
+    .subject-header {
+      background: var(--secondary-color);
+      padding: 12px 15px;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .subject-content { padding: 10px; overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; margin-top: 5px; font-size: 0.9rem; }
+    th, td { border: 1px solid var(--border-color); padding: 8px; text-align: left; }
+    th { background-color: var(--secondary-color); }
+    .pct-input, .notes-input { width: 100%; padding: 6px; border: 1px solid var(--border-color); border-radius: 4px; color: #111; }
+    .pct-input { text-align: center; }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>CCEA A-Level Past Paper Tracker</h1>
+    <div class="name-row">
+      <span class="name-label">Name:</span>
+      <input type="text" id="student-name" class="name-input">
+    </div>
+  </header>
+
+  <main>
+    <div class="selector-container">
+      <label>Level:</label>
+      <div class="level-buttons">
+        <button type="button" class="level-btn" id="btn-as" onclick="selectLevel('AS')">AS Level</button>
+        <button type="button" class="level-btn" id="btn-a2" onclick="selectLevel('A2')">A2 Level</button>
+      </div>
+
+      <div id="subject-dropdown-wrapper" class="hidden">
+        <label for="subject-dropdown">My A-Level subjects are:</label>
+        <select id="subject-dropdown">
+          <option value="">-- Choose a subject to add --</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="active-subjects-container"></div>
+  </main>
+
+  <script>
+    const asStandard3 = ["2026 - AS 1", "2026 - AS 2", "2026 - AS 3", "2025 - AS 1", "2025 - AS 2", "2025 - AS 3", "2024 - AS 1", "2024 - AS 2", "2024 - AS 3", "2023 - AS 1", "2023 - AS 2", "2023 - AS 3", "2022 - AS 1", "2022 - AS 2", "2022 - AS 3", "2021 - AS 1", "2021 - AS 2", "2021 - AS 3", "2019 - AS 1", "2019 - AS 2", "2019 - AS 3", "2018 - AS 1", "2018 - AS 2", "2018 - AS 3", "2017 - AS 1", "2017 - AS 2", "2017 - AS 3"];
+    const a2Standard3 = ["2026 – A2 1", "2026 – A2 2", "2026 – A2 3", "2025 – A2 1", "2025 – A2 2", "2025 – A2 3", "2024 – A2 1", "2024 – A2 2", "2024 – A2 3", "2023 – A2 1", "2023 – A2 2", "2023 – A2 3", "2022 – A2 1", "2022 – A2 2", "2022 – A2 3", "2021 – A2 1", "2021 – A2 2", "2021 – A2 3", "2019 – A2 1", "2019 – A2 2", "2029 – A2 3", "2018 – A2 1", "2018 – A2 2", "2018 – A2 3", "2017 – A2 1", "2017 – A2 2", "2017 – A2 3"];
+    const asStandard2 = ["2026 – AS 1", "2026 – AS 2", "2025 – AS 1", "2025 – AS 2", "2024 – AS 1", "2024 – AS2", "2023 – AS1", "2023 – AS 2", "2022- AS 1", "2022 – AS 2", "2021 – AS 1", "2021 – AS 2", "2019 – AS 1", "2019 – AS 2", "2018 – AS 1", "2018 – AS 2", "2017 – AS 1", "2017 – AS 2"];
+    const a2Standard2 = ["2026 – A2 1", "2026 – A2 2", "2025 – A2 1", "2025 – A2 2", "2024 – A2 1", "2024 – A2 2", "2023 – A2 1", "2023 – A2 2", "2022 – A2 1", "2022 – A2 2", "2021 – A2 1", "2021 – A2 2", "2019 – A2 1", "2019 – A2 2", "2018 – A2 1", "2018 - A2 2", "2017 – A2 1", "2017 – A2 2"];
+    const asStandard1 = ["2026 – AS 1", "2025 – AS 1", "2024 – AS 1", "2023 – AS 1", "2022 – AS 1", "2021 – AS 1", "2019 – AS 1", "2018 – AS 1", "2017 – AS 1"];
+    const a2Standard1 = ["2026 – A2 1", "2025 – A2 1", "2024 – A2 1", "2023 – A2 1", "2022 – A2 1", "2021 – A2 1", "2019 – A2 1", "2018 – A2 1", "2017 – A2 1"];
+    const chemAS = ["2026 – AS 1", "2026 – AS 2", "2026 – AS 3 Booklet A", "2026 – AS 3 Booklet B", "2025 – AS 1", "2025 – AS 2", "2025 – AS 3 Booklet A", "2025 – AS 3 Booklet B", "2024 – AS 1", "2024 – AS 2", "2024 – AS 3 Booklet A", "2024 – AS 3 Booklet B", "2023 – AS 1", "2023 – AS 2", "2023 – AS 3 Booklet A", "2023 – AS 3 Booklet B", "2022 – AS 1", "2022 – AS 2", "2022 – AS 3 Booklet A", "2022 – AS 3 Booklet B", "2021 – AS 1", "2021 – AS 2", "2021 – AS 3 Booklet A", "2021 – AS 3 Booklet B", "2019 – AS 1", "2019 – AS 2", "2019 – AS 3 Booklet A", "2019 – AS 3 Booklet B", "2018 – AS 1", "2018 – AS 2", "2018 – AS 3 Booklet A", "2018 – AS 3 Booklet B", "2017 – AS 1", "2017 – AS 2", "2017 – AS 3 Booklet A", "2017 – AS 3 Booklet B"];
+    const chemA2 = ["2026 – A2 1", "2026 – A2 2", "2026 – A2 3 Booklet A", "2026 – A2 3 Booklet B", "2025 – A2 1", "2025 – A2 2", "2025 – A2 3 Booklet A", "2025 – A2 3 Booklet B", "2024 – A2 1", "2024 – A2 2", "2024 – A2 3 Booklet A", "2024 – A2 3 Booklet B", "2023 – A2 1", "2023 – A2 2", "2023 – A2 3 Booklet A", "2023 – A2 3 Booklet B", "2022 – A2 1", "2022 – A2 2", "2022 – A2 3 Booklet A", "2022 – A2 3 Booklet B", "2021 – A2 1", "2021 – A2 2", "2021 – A2 3 Booklet A", "2021 – A2 3 Booklet B", "2019 – A2 1", "2019 – A2 2", "2019 – A2 3 Booklet A", "2019 – A2 3 Booklet B", "2018 – A2 1", "2018 – A2 2", "2018 – A2 3 Booklet A", "2018 – A2 3 Booklet B", "2017 – A2 1", "2017 – A2 2", "2017 – A2 3 Booklet A", "2017 – A2 3 Booklet B"];
+
+    const subjectsMap = {
+      "AS": ["Biology AS", "Business Studies AS", "Chemistry AS", "Digital Technology AS", "English Literature AS", "Environmental Technology AS", "French AS", "Further Mathematics AS", "Geography AS", "German AS", "Government and Politics AS", "Health and Social Care AS", "History AS", "Irish AS", "Life and Health Sciences AS", "Mathematics AS", "Moving Image Arts AS", "Music AS", "Nutrition and Food Science AS", "Physics AS", "Professional Business Services AS", "Religious Studies AS", "Software Systems Development AS", "Spanish AS", "Sports Science and the Active Leisure Industry AS", "Technology and Design AS"],
+      "A2": ["Biology A2", "Business Studies A2", "Chemistry A2", "Digital Technology A2", "Economics A2", "English Literature A2", "Environmental Technology A2", "French A2", "Further Mathematics A2", "Geography A2", "German A2", "Government and Politics A2", "Health and Social Care A2", "History A2", "Irish A2", "Life and Health Sciences A2", "Mathematics A2", "Moving Image Arts A2", "Music A2", "Nutrition and Food Science A2", "Physics A2", "Professional Business Services A2", "Religious Studies A2", "Software Systems Development A2", "Spanish A2", "Sports Science and the Active Leisure Industry A2", "Technology and Design A2"]
+    };
+
+    function getPapersForSubject(subject) {
+      if (subject === "Biology AS" || subject === "French AS" || subject === "Geography AS") return asStandard3;
+      if (subject === "Biology A2" || subject === "French A2" || subject === "Geography A2") return a2Standard3;
+      if (subject === "Business Studies AS" || subject === "Digital Technology AS" || subject === "English Literature AS") return asStandard2;
+      if (subject === "Business Studies A2" || subject === "Economics A2" || subject === "English Literature A2") return a2Standard2;
+      if (subject === "Chemistry AS") return chemAS;
+      if (subject === "Chemistry A2") return chemA2;
+      if (subject === "Digital Technology A2" || subject === "Environmental Technology AS" || subject === "Environmental Technology A2") return a2Standard1;
+      if (subject === "Further Mathematics AS") return asStandard2.slice(0, 16);
+      if (subject === "Further Mathematics A2") return a2Standard2.slice(0, 16);
+      return subject.endsWith("AS") ? asStandard2 : a2Standard2;
+    }
+
+    let appState = { name: "", selectedSubjects: [] };
+    if (localStorage.getItem("ccea_tracker_state")) {
